@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f6f1e7;
+  --card: #fcfaf5;
+  --field: #f5efe4;
+  --line: #e3dacb;
+  --ink: #3a2a20;
+  --muted: #7c6c5e;
+  --indigo: #2b4a7e;
+  --indigo-deep: #1f3a5f;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-field: var(--field);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-indigo: var(--indigo);
+  --color-indigo-deep: var(--indigo-deep);
+  --font-sans: var(--font-gothic), "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --font-mincho: var(--font-mincho), "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --font-hand: var(--font-hand), "Hiragino Maru Gothic ProN", sans-serif;
+}
+
+body {
+  background-color: var(--paper);
+  /* 和紙っぽい、ごく淡いムラ */
+  background-image:
+    radial-gradient(circle at 20% 10%, rgb(255 255 255 / 0.55), transparent 40%),
+    radial-gradient(circle at 85% 70%, rgb(234 222 200 / 0.35), transparent 45%);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+.card {
+  background: var(--card);
+  border-radius: 1.25rem;
+  box-shadow:
+    0 1px 2px rgb(58 42 32 / 0.06),
+    0 8px 24px -12px rgb(58 42 32 / 0.18);
+}
+
+.field {
+  width: 100%;
+  background: var(--field);
+  border: 1.5px solid var(--line);
+  border-radius: 0.875rem;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.field::placeholder {
+  color: #a3968a;
+}
+.field:focus {
+  border-color: var(--indigo);
+  box-shadow: 0 0 0 3px rgb(43 74 126 / 0.15);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0.85rem 1.5rem;
+  font-weight: 700;
+  transition: background-color 0.15s, transform 0.1s, opacity 0.15s;
+  cursor: pointer;
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.btn-primary {
+  background: var(--indigo);
+  color: #fff;
+  box-shadow: 0 3px 0 var(--indigo-deep);
+}
+.btn-primary:hover {
+  background: var(--indigo-deep);
+}
+.btn-outline {
+  background: var(--card);
+  color: var(--indigo);
+  border: 1.5px solid var(--indigo);
+}
+.btn-outline:hover {
+  background: #eef1f7;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+.section-title::before {
+  content: "";
+  width: 0.9rem;
+  height: 0.9rem;
+  background: var(--indigo);
+  border-radius: 2px;
+  flex: none;
+}
+
+dialog::backdrop {
+  background: rgb(31 26 22 / 0.45);
+}
