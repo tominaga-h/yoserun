@@ -22,6 +22,8 @@ export type Message = {
 
 export type NewMessage = Omit<Message, "createdAt">;
 
+export type RoomSummary = Room & { messageCount: number; lastMessageAt: string | null };
+
 interface Store {
   createRoom(room: Omit<Room, "createdAt">): Promise<Room>;
   getRoom(id: string): Promise<Room | null>;
@@ -29,6 +31,8 @@ interface Store {
   addMessage(message: NewMessage): Promise<Message>;
   /** 新しい順 */
   listMessages(roomId: string): Promise<Message[]>;
+  /** 運営者用。作成が新しい順 */
+  listRooms(): Promise<RoomSummary[]>;
 }
 
 // ---------------------------------------------------------------------------
@@ -135,6 +139,19 @@ function createPostgresStore(url: string): Store {
         select * from messages where room_id = ${roomId} order by created_at desc`;
       return rows.map(toMessage);
     },
+    async listRooms() {
+      await migrate();
+      const rows = await sql<(RoomRow & { message_count: number; last_message_at: Date | null })[]>`
+        select r.*, count(m.id)::int as message_count, max(m.created_at) as last_message_at
+        from rooms r left join messages m on m.room_id = r.id
+        group by r.id
+        order by r.created_at desc`;
+      return rows.map((r) => ({
+        ...toRoom(r),
+        messageCount: r.message_count,
+        lastMessageAt: r.last_message_at?.toISOString() ?? null,
+      }));
+    },
   };
 }
 
@@ -189,6 +206,16 @@ function createFileStore(file: string): Store {
       (await read()).messages
         .filter((m) => m.roomId === roomId)
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    listRooms: async () => {
+      const { rooms, messages } = await read();
+      return rooms
+        .map((room) => {
+          const own = messages.filter((m) => m.roomId === room.id);
+          const last = own.reduce<string | null>((acc, m) => (!acc || m.createdAt > acc ? m.createdAt : acc), null);
+          return { ...room, messageCount: own.length, lastMessageAt: last };
+        })
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    },
   };
 }
 
