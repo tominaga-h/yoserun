@@ -1,6 +1,7 @@
 "use server";
 
 import { customAlphabet } from "nanoid";
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { INK_COLORS, LIMITS, STAMPS } from "@/lib/constants";
 import { store } from "@/lib/store";
@@ -53,5 +54,32 @@ export async function postMessage(
   if (!room) return { error: "このお部屋は見つかりませんでした" };
 
   await store.addMessage({ id: messageId(), roomId, author, body, color, stamp });
+  return { ok: true };
+}
+
+export async function updateCenterText(
+  adminKey: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const centerText = text(formData, "centerText")
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join("\n");
+
+  if (Array.from(centerText.replace(/\n/g, "")).length > LIMITS.centerText) {
+    return { error: `${LIMITS.centerText}文字までです` };
+  }
+  if (centerText.split("\n").length > LIMITS.centerTextLines) {
+    return { error: `${LIMITS.centerTextLines}行までです` };
+  }
+
+  // 空なら既定の「ありがとうございました」に戻す
+  const room = await store.updateCenterText(adminKey, centerText || null);
+  if (!room) return { error: "このお部屋は見つかりませんでした" };
+
+  refresh();
   return { ok: true };
 }

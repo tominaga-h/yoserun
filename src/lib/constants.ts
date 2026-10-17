@@ -25,6 +25,8 @@ export const LIMITS = {
   roomName: 40,
   authorName: 20,
   message: 140,
+  centerText: 30,
+  centerTextLines: 3,
 } as const;
 
 export const CENTER_TEXT = "ありがとう\nございました";

@@ -10,6 +10,7 @@ import { UrlCard } from "@/components/UrlCard";
 import { SHIKISHI_CAPACITY, inkColor } from "@/lib/constants";
 import { store } from "@/lib/store";
 import { siteOrigin } from "@/lib/url";
+import { CenterTextForm } from "./CenterTextForm";
 
 export const metadata: Metadata = {
   title: "お部屋のダッシュボード",
@@ -108,8 +109,10 @@ async function Dashboard({ params }: { params: PageProps<"/room/[adminKey]">["pa
 
       <div className="flex flex-col gap-5">
         <Link href={`/view/${room.id}?mode=shikishi`} className="block transition-transform hover:-translate-y-0.5">
-          <Shikishi messages={messages} orientation="landscape" />
+          <Shikishi messages={messages} orientation="landscape" centerText={room.centerText ?? undefined} />
         </Link>
+
+        <CenterTextForm adminKey={room.adminKey} centerText={room.centerText} />
 
         <section className="card p-5 sm:p-6">
           <h2 className="section-title">色紙の進み具合</h2>

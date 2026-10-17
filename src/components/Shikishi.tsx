@@ -143,11 +143,12 @@ function fitCenterText(
   h: number,
   max: number,
 ) {
-  const lines = text.split("\n");
+  // 書いたとおりの改行を優先し、長い1行は枠の幅で折り返す
+  let lines = text.split("\n");
   for (let size = max; size > 12; size -= 2) {
     ctx.font = `600 ${size}px ${family}`;
-    const widest = Math.max(...lines.map((l) => ctx.measureText(l).width));
-    if (widest <= w && lines.length * size * 1.3 <= h) return { size, lines };
+    lines = wrap(ctx, text, w);
+    if (lines.length * size * 1.3 <= h) return { size, lines };
   }
   return { size: 12, lines };
 }
@@ -183,7 +184,7 @@ function drawShikishi(
   const { c0, c1, r0, r1 } = grid.center;
   const bw = (c1 - c0 + 1) * cw;
   const bh = (r1 - r0 + 1) * ch;
-  const center = fitCenterText(ctx, family, centerText, bw * 0.8, bh * 0.7, 112);
+  const center = fitCenterText(ctx, family, centerText, bw * 0.8, bh * 0.85, 112);
   ctx.font = `600 ${center.size}px ${family}`;
   ctx.fillStyle = CENTER_INK;
   ctx.textAlign = "center";

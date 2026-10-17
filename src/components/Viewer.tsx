@@ -11,11 +11,13 @@ type Mode = "list" | "shikishi";
 export function Viewer({
   roomName,
   messages,
+  centerText,
   initialMode = "list",
   emptyAction,
 }: {
   roomName: string;
   messages: ShikishiMessage[];
+  centerText?: string;
   initialMode?: Mode;
   emptyAction?: React.ReactNode;
 }) {
@@ -108,7 +110,7 @@ export function Viewer({
         </ul>
       ) : (
         <div className="mx-auto mt-8 max-w-4xl">
-          <Shikishi ref={canvasRef} messages={messages} />
+          <Shikishi ref={canvasRef} messages={messages} centerText={centerText} />
         </div>
       )}
     </>

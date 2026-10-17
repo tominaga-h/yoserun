@@ -7,6 +7,8 @@ export type Room = {
   id: string;
   adminKey: string;
   name: string;
+  /** 色紙の真ん中の言葉。null なら既定の「ありがとうございました」 */
+  centerText: string | null;
   createdAt: string;
 };
 
@@ -25,9 +27,10 @@ export type NewMessage = Omit<Message, "createdAt">;
 export type RoomSummary = Room & { messageCount: number; lastMessageAt: string | null };
 
 interface Store {
-  createRoom(room: Omit<Room, "createdAt">): Promise<Room>;
+  createRoom(room: Omit<Room, "createdAt" | "centerText">): Promise<Room>;
   getRoom(id: string): Promise<Room | null>;
   getRoomByAdminKey(adminKey: string): Promise<Room | null>;
+  updateCenterText(adminKey: string, centerText: string | null): Promise<Room | null>;
   addMessage(message: NewMessage): Promise<Message>;
   /** 新しい順 */
   listMessages(roomId: string): Promise<Message[]>;
@@ -70,6 +73,7 @@ function createPostgresStore(url: string): Store {
         created_at timestamptz not null default now()
       );
       create index if not exists messages_room_idx on messages (room_id, created_at desc);
+      alter table rooms add column if not exists center_text text;
       alter table rooms enable row level security;
       alter table messages enable row level security;
     `
@@ -79,7 +83,13 @@ function createPostgresStore(url: string): Store {
         throw error;
       }));
 
-  type RoomRow = { id: string; admin_key: string; name: string; created_at: Date };
+  type RoomRow = {
+    id: string;
+    admin_key: string;
+    name: string;
+    center_text: string | null;
+    created_at: Date;
+  };
   type MessageRow = {
     id: string;
     room_id: string;
@@ -94,6 +104,7 @@ function createPostgresStore(url: string): Store {
     id: r.id,
     adminKey: r.admin_key,
     name: r.name,
+    centerText: r.center_text,
     createdAt: r.created_at.toISOString(),
   });
   const toMessage = (m: MessageRow): Message => ({
@@ -123,6 +134,12 @@ function createPostgresStore(url: string): Store {
     async getRoomByAdminKey(adminKey) {
       await migrate();
       const [row] = await sql<RoomRow[]>`select * from rooms where admin_key = ${adminKey}`;
+      return row ? toRoom(row) : null;
+    },
+    async updateCenterText(adminKey, centerText) {
+      await migrate();
+      const [row] = await sql<RoomRow[]>`
+        update rooms set center_text = ${centerText} where admin_key = ${adminKey} returning *`;
       return row ? toRoom(row) : null;
     },
     async addMessage(m) {
@@ -189,13 +206,19 @@ function createFileStore(file: string): Store {
   return {
     createRoom: (room) =>
       update((data) => {
-        const created = { ...room, createdAt: now() };
+        const created = { ...room, centerText: null, createdAt: now() };
         data.rooms.push(created);
         return created;
       }),
     getRoom: async (id) => (await read()).rooms.find((r) => r.id === id) ?? null,
     getRoomByAdminKey: async (adminKey) =>
       (await read()).rooms.find((r) => r.adminKey === adminKey) ?? null,
+    updateCenterText: (adminKey, centerText) =>
+      update((data) => {
+        const room = data.rooms.find((r) => r.adminKey === adminKey);
+        if (room) room.centerText = centerText;
+        return room ?? null;
+      }),
     addMessage: (m) =>
       update((data) => {
         const created = { ...m, createdAt: now() };

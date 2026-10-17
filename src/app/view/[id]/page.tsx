@@ -37,6 +37,7 @@ async function View({ params, searchParams }: Pick<PageProps<"/view/[id]">, "par
       <Viewer
         roomName={room.name}
         messages={messages}
+        centerText={room.centerText ?? undefined}
         initialMode={mode === "shikishi" ? "shikishi" : "list"}
         emptyAction={
           <Link href={`/write/${room.id}`} className="btn btn-primary mt-5">
